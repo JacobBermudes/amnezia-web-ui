@@ -29,7 +29,7 @@ RUN chmod +x /app/scripts/*.sh
 
 # Expose default ports
 EXPOSE 80
-EXPOSE 51820/udp
+EXPOSE 51340/udp
 
 ENV NGINX_PORT=80
 

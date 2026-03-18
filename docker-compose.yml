@@ -1,0 +1,38 @@
+services:
+  sb-web-ui:
+    image: jacobbermudes/grandpotato:05
+    container_name: sb-web-ui
+    ports:
+      - "8080:8080/tcp"
+      - "51340:51340/udp" 
+    environment:
+      - NGINX_PORT=8080
+      - NGINX_USER=${NGINX_USER}
+      - NGINX_PASSWORD=${NGINX_PASSWORD}
+      - AUTO_START_SERVERS=true
+      - DEFAULT_MTU=1280
+      - DEFAULT_SUBNET=10.0.0.0/24
+      - DEFAULT_PORT=51340
+    volumes:
+      - amnezia-data:/etc/amnezia
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    devices:
+      - /dev/net/tun
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.all.forwarding=1
+      - net.ipv6.conf.default.forwarding=1
+    restart: unless-stopped
+    networks:
+      - surfboost
+
+volumes:
+  amnezia-data:
+
+networks:
+  surfboost:
+    driver: bridge
