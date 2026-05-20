@@ -2,8 +2,7 @@ FROM golang:1.25.5-alpine AS go-builder
 WORKDIR /src
 
 COPY go-monitor/ .
-RUN go mod init awg-monitor && \
-    go mod tidy && \
+RUN go mod tidy && \
     CGO_ENABLED=0 GOOS=linux go build -o /awg-monitor main.go
 
 FROM amneziavpn/amneziawg-go:latest

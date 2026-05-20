@@ -21,10 +21,10 @@ type PeerStat struct {
 }
 
 type ServerLoad struct {
-	TotalRx    int64               `json:"total_rx_bytes"`
-	TotalTx    int64               `json:"total_tx_bytes"`
-	ActivePeers int                `json:"active_peers"`
-	Peers      map[string]PeerStat `json:"peers"`
+	TotalRx     int64               `json:"total_rx_bytes"`
+	TotalTx     int64               `json:"total_tx_bytes"`
+	ActivePeers int                 `json:"active_peers"`
+	Peers       map[string]PeerStat `json:"peers"`
 }
 
 func getAWGLoad(interfaceName string) (*ServerLoad, error) {
@@ -82,10 +82,13 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	awgInterface := "awg0" 
-
 	r.GET("/api/v1/load", func(c *gin.Context) {
-		load, err := getAWGLoad(awgInterface)
+		server_id := c.Query("server")
+		if server_id == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "server parameter is required"})
+			return
+		}
+		load, err := getAWGLoad("wg-" + server_id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch AWG stats: " + err.Error()})
 			return
