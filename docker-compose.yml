@@ -3,10 +3,10 @@ services:
     image: jacobbermudes/grandpotato:05
     container_name: sb-web-ui
     ports:
-      - "8080:8080/tcp"
+      - "80:80/tcp"
       - "51340:51340/udp" 
     environment:
-      - NGINX_PORT=8080
+      - NGINX_PORT=80
       - NGINX_USER=${NGINX_USER}
       - NGINX_PASSWORD=${NGINX_PASSWORD}
       - AUTO_START_SERVERS=true

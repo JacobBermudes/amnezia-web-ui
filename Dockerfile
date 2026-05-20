@@ -1,6 +1,13 @@
+FROM golang:1.25.5-alpine AS go-builder
+WORKDIR /src
+
+COPY go-monitor/ .
+RUN go mod init awg-monitor && \
+    go mod tidy && \
+    CGO_ENABLED=0 GOOS=linux go build -o /awg-monitor main.go
+
 FROM amneziavpn/amneziawg-go:latest
 
-# Install dependencies for web UI
 RUN apk update && apk add \
     python3 \
     py3-pip \
@@ -18,6 +25,9 @@ RUN pip3 install flask flask_socketio flask-wtf requests python-socketio eventle
 RUN mkdir -p /app/web-ui /var/log/supervisor /var/log/webui /var/log/amnezia /var/log/nginx /etc/amnezia/amneziawg /etc/letsencrypt /var/www/le
 
 COPY web-ui /app/web-ui/
+
+COPY --from=go-builder /awg-monitor /app/awg-monitor
+RUN chmod +x /app/awg-monitor
 
 RUN mkdir -p /run/nginx
 COPY config/nginx/ /etc/nginx/http.d/
