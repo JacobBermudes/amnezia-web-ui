@@ -71,6 +71,10 @@ All server configuration is done via web interface or via API endpoints. Providi
 
 ### Server Management
 
+#### AdGuard
+
+  * ssh -L 8080:127.0.0.1:8080 -L 3000:127.0.0.1:3000 ip-server
+
 #### Create Server
 
 ```yaml
