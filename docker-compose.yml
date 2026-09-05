@@ -30,9 +30,28 @@ services:
     networks:
       - surfboost
 
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: adguardhome
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80/tcp"
+      - "127.0.0.1:3000:3000/tcp"
+    volumes:
+      - workdir:/opt/adguardhome/work
+      - confdir:/opt/adguardhome/conf
+    networks:
+      surfboost:
+        ipv4_address: 172.20.0.254
+
 volumes:
   amnezia-data:
+  workdir:
+  confdir:
 
 networks:
   surfboost:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
