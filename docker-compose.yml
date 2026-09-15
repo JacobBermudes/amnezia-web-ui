@@ -1,6 +1,6 @@
 services:
   sb-web-ui:
-    image: jacobbermudes/grandpotato:09
+    image: jacobbermudes/grandpotato:10
     container_name: sb-web-ui
     ports:
       - "127.0.0.1:80:80/tcp"
@@ -9,6 +9,7 @@ services:
       - NGINX_PORT=80
       - NGINX_USER=${NGINX_USER}
       - NGINX_PASSWORD=${NGINX_PASSWORD}
+      - API_TOKEN=${API_TOKEN}
       - AUTO_START_SERVERS=true
       - DEFAULT_MTU=1280
       - DEFAULT_SUBNET=10.0.0.0/24

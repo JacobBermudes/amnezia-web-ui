@@ -2,32 +2,67 @@ package main
 
 import (
 	"bytes"
+	"net"
 	"net/http"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-type PeerStat struct {
-	PublicKey       string `json:"public_key"`
-	Endpoint        string `json:"endpoint"`
-	LatestHandshake int64  `json:"latest_handshake"`
-	TransferRx      int64  `json:"transfer_rx"`
-	TransferTx      int64  `json:"transfer_tx"`
-	IsActive        bool   `json:"is_active"`
+const AgentVersion = "1.0.0"
+
+var SecretToken = os.Getenv("API_TOKEN")
+
+type PeerTraffic struct {
+	PublicKey  string `json:"pub"`
+	Rx         int64  `json:"rx"`
+	Tx         int64  `json:"tx"`
+	Handshake  int64  `json:"handshake"`
+	EndpointIP string `json:"endpoint_ip"`
 }
 
-type ServerLoad struct {
-	TotalRx     int64               `json:"total_rx_bytes"`
-	TotalTx     int64               `json:"total_tx_bytes"`
-	ActivePeers int                 `json:"active_peers"`
-	Peers       map[string]PeerStat `json:"peers"`
+type ServerHealth struct {
+	LoadAvg   float64 `json:"load_avg"`
+	MemFreeMB int64   `json:"mem_free_mb"`
 }
 
-func getAWGLoad(interfaceName string) (*ServerLoad, error) {
+type LoadResponse struct {
+	ServerVersion string        `json:"server_version"`
+	Health        ServerHealth  `json:"health"`
+	Peers         []PeerTraffic `json:"peers"`
+}
+
+func getServerHealth() ServerHealth {
+	var health ServerHealth
+
+	if data, err := os.ReadFile("/proc/loadavg"); err == nil {
+		fields := strings.Fields(string(data))
+		if len(fields) > 0 {
+			health.LoadAvg, _ = strconv.ParseFloat(fields[0], 64)
+		}
+	}
+
+	if data, err := os.ReadFile("/proc/meminfo"); err == nil {
+		lines := strings.Split(string(data), "\n")
+		for _, line := range lines {
+			if strings.HasPrefix(line, "MemAvailable:") {
+				fields := strings.Fields(line)
+				if len(fields) >= 2 {
+					kb, _ := strconv.ParseInt(fields[1], 10, 64)
+					health.MemFreeMB = kb / 1024
+				}
+				break
+			}
+		}
+	}
+
+	return health
+}
+
+func getAWGLoad(interfaceName string) ([]PeerTraffic, error) {
 	cmd := exec.Command("awg", "show", interfaceName, "dump")
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -37,13 +72,11 @@ func getAWGLoad(interfaceName string) (*ServerLoad, error) {
 	}
 
 	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
-	load := &ServerLoad{
-		Peers: make(map[string]PeerStat),
+	if len(lines) <= 1 {
+		return []PeerTraffic{}, nil
 	}
 
-	if len(lines) <= 1 {
-		return load, nil
-	}
+	peers := make([]PeerTraffic, 0, len(lines)-1)
 
 	for _, line := range lines[1:] {
 		fields := strings.Split(line, "\t")
@@ -51,31 +84,33 @@ func getAWGLoad(interfaceName string) (*ServerLoad, error) {
 			continue
 		}
 
-		pubKey := fields[1]
-		endpoint := fields[3]
-		handshake, _ := strconv.ParseInt(fields[5], 10, 64)
-		rx, _ := strconv.ParseInt(fields[6], 10, 64)
-		tx, _ := strconv.ParseInt(fields[7], 10, 64)
+		rx, _ := strconv.ParseInt(fields[5], 10, 64)
+		tx, _ := strconv.ParseInt(fields[6], 10, 64)
+		handshake, _ := strconv.ParseInt(fields[4], 10, 64)
 
-		isActive := (time.Now().Unix() - handshake) < 180
-
-		load.Peers[pubKey] = PeerStat{
-			PublicKey:       pubKey,
-			Endpoint:        endpoint,
-			LatestHandshake: handshake,
-			TransferRx:      rx,
-			TransferTx:      tx,
-			IsActive:        isActive,
+		rawEndpoint := fields[2]
+		endpointIP := ""
+		if rawEndpoint != "(none)" {
+			host, _, err := net.SplitHostPort(rawEndpoint)
+			if err == nil {
+				endpointIP = host
+			} else {
+				endpointIP = rawEndpoint
+			}
 		}
 
-		load.TotalRx += rx
-		load.TotalTx += tx
-		if isActive {
-			load.ActivePeers++
+		if rx > 0 || tx > 0 || handshake > 0 {
+			peers = append(peers, PeerTraffic{
+				PublicKey:  fields[0],
+				Rx:         rx,
+				Tx:         tx,
+				Handshake:  handshake,
+				EndpointIP: endpointIP,
+			})
 		}
 	}
 
-	return load, nil
+	return peers, nil
 }
 
 func main() {
@@ -83,20 +118,34 @@ func main() {
 	r := gin.Default()
 
 	r.GET("/api/v1/load", func(c *gin.Context) {
-		server_id := c.Query("server")
-		if server_id == "" {
+		clientToken := c.GetHeader("X-API-Token")
+		if clientToken != SecretToken {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized access"})
+			return
+		}
+
+		serverID := c.Query("server")
+		if serverID == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "server parameter is required"})
 			return
 		}
-		load, err := getAWGLoad("wg-" + server_id)
+
+		peers, err := getAWGLoad("wg-" + serverID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch AWG stats: " + err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, load)
+
+		response := LoadResponse{
+			ServerVersion: AgentVersion,
+			Health:        getServerHealth(),
+			Peers:         peers,
+		}
+
+		c.JSON(http.StatusOK, response)
 	})
 
-	if err := r.Run(":8080"); err != nil {
+	if err := r.Run(":8081"); err != nil {
 		panic(err)
 	}
 }
