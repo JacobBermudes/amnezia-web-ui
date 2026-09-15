@@ -10,6 +10,7 @@ apt-get update
 apt-get install -y ufw fail2ban
 
 echo "2. Настройка Fail2ban..."
+echo -e "[sshd]\nbackend = systemd\nenabled = true" | sudo tee /etc/fail2ban/jail.local
 systemctl enable fail2ban
 systemctl restart fail2ban
 
