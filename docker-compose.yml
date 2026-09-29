@@ -46,7 +46,7 @@ services:
         ipv4_address: 172.20.0.254
 
   yggdrasil:
-    image: ghcr.io/yggdrasil-network/yggdrasil:latest
+    image: jacobbermudes/yggdrasil:latest
     container_name: yggdrasil
     restart: unless-stopped
     cap_add:
@@ -61,7 +61,7 @@ services:
     networks:
       surfboost:
         ipv4_address: 172.20.0.253
-
+      
 volumes:
   amnezia-data:
   workdir:
