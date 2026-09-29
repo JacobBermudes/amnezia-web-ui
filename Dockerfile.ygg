@@ -1,0 +1,3 @@
+FROM alpine:latest
+RUN apk add --no-cache --no-scripts yggdrasil
+CMD ["yggdrasil", "-useconffile", "/etc/yggdrasil/yggdrasil.conf"]

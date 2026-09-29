@@ -1,3 +1,3 @@
 mkdir -p ygg-data
-docker run --rm ghcr.io/yggdrasil-network/yggdrasil:latest -genconf > ygg-data/yggdrasil.conf
-grep IPv6Address ygg-data/yggdrasil.conf
+docker run --rm jacobbermudes/yggdrasil:latest yggdrasil -genconf > ygg-data/yggdrasil.conf
+docker run --rm -v $PWD/yggdrasil.conf:/yggdrasil.conf jacobbermudes/yggdrasil:latest yggdrasil -useconffile /yggdrasil.conf -address
