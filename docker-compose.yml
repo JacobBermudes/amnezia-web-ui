@@ -1,6 +1,6 @@
 services:
   sb-web-ui:
-    image: jacobbermudes/grandpotato:10
+    image: jacobbermudes/grandpotato:11
     container_name: sb-web-ui
     ports:
       - "80/tcp"
