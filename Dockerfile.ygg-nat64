@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk add --no-cache --no-scripts yggdrasil coredns iptables iproute2 && \
+RUN apk add --no-cache --no-scripts yggdrasil coredns iptables iproute2 socat && \
     apk add --no-cache --no-scripts tayga --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing/
 
 COPY entrypoint.sh /entrypoint.sh

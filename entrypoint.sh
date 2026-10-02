@@ -39,4 +39,6 @@ ip -6 route add "$NAT64_PREFIX" dev nat64
 
 iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -j MASQUERADE
 
+socat TCP6-LISTEN:80,fork,reuseaddr TCP4:sb-web-ui:80 &
+
 exec tayga -d
