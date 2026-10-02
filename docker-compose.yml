@@ -4,6 +4,7 @@ services:
     container_name: sb-web-ui
     ports:
       - "80/tcp"
+      - "[::]:80:80"
       - "51340:51340/udp"
     environment:
       - NGINX_PORT=80

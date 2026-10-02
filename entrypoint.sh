@@ -32,8 +32,10 @@ EOF
 mkdir -p /var/db/tayga
 tayga --mktun
 ip link set nat64 up
+
+ip addr add 10.10.10.1 dev nat64
 ip route add 10.10.10.0/24 dev nat64
-ip route add "$NAT64_PREFIX" dev nat64
+ip -6 route add "$NAT64_PREFIX" dev nat64
 
 iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -j MASQUERADE
 
