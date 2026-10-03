@@ -505,7 +505,7 @@ class AmneziaApp {
 
         const formData = {
             name: nameElement ? nameElement.value.trim() : 'New Server',
-            port: portElement ? parseInt(portElement.value) : 51820,
+            port: portElement ? parseInt(portElement.value) : 51340,
             subnet: subnetElement ? subnetElement.value : '10.0.0.0/24',
             mtu: mtuElement ? parseInt(mtuElement.value) : 1420,
             dns: dnsElement ? dnsElement.value.trim() : '8.8.8.8,1.1.1.1',

@@ -8,7 +8,7 @@ import requests
 import threading
 import time
 import ipaddress
-from config import *
+import config
 
 class AmneziaManager:
     def __init__(self, socketio):
@@ -18,14 +18,14 @@ class AmneziaManager:
         self.public_ip = self.detect_public_ip()
         self.traffic_update_interval = 5
 
-        if AUTO_START_SERVERS:
+        if config.AUTO_START_SERVERS:
             self.auto_start_servers()
             
         self.start_traffic_updates()
 
     def ensure_directories(self):
-        os.makedirs(CONFIG_DIR, exist_ok=True)
-        os.makedirs(WIREGUARD_CONFIG_DIR, exist_ok=True)
+        os.makedirs(config.CONFIG_DIR, exist_ok=True)
+        os.makedirs(config.WIREGUARD_CONFIG_DIR, exist_ok=True)
         os.makedirs('/var/log/amnezia', exist_ok=True)
 
     def detect_public_ip(self):
@@ -74,13 +74,13 @@ class AmneziaManager:
                     self.start_server(server['id'])
 
     def load_config(self):
-        if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, 'r') as f:
+        if os.path.exists(config.CONFIG_FILE):
+            with open(config.CONFIG_FILE, 'r') as f:
                 return json.load(f)
         return {"servers": [], "clients": {}}
 
     def save_config(self):
-        with open(CONFIG_FILE, 'w') as f:
+        with open(config.CONFIG_FILE, 'w') as f:
             json.dump(self.config, f, indent=2)
 
     def execute_command(self, command):
@@ -131,9 +131,9 @@ class AmneziaManager:
 
     def create_wireguard_server(self, server_data):
         server_name = server_data.get('name', 'New Server')
-        port = server_data.get('port', DEFAULT_PORT)
-        subnet = server_data.get('subnet', DEFAULT_SUBNET)
-        mtu = server_data.get('mtu', DEFAULT_MTU)
+        port = server_data.get('port', config.DEFAULT_PORT)
+        subnet = server_data.get('subnet', config.DEFAULT_SUBNET)
+        mtu = server_data.get('mtu', config.DEFAULT_MTU)
 
         custom_dns = server_data.get('dns')
         if custom_dns:
@@ -142,9 +142,9 @@ class AmneziaManager:
             elif isinstance(custom_dns, list):
                 dns_servers = custom_dns
             else:
-                dns_servers = DNS_SERVERS
+                dns_servers = config.DNS_SERVERS
         else:
-            dns_servers = DNS_SERVERS
+            dns_servers = config.DNS_SERVERS
 
         if mtu < 1280 or mtu > 1440:
             raise ValueError(f"MTU must be between 1280 and 1440, got {mtu}")
@@ -153,11 +153,11 @@ class AmneziaManager:
             if not self.is_valid_ip(dns):
                 raise ValueError(f"Invalid DNS server IP: {dns}")
 
-        enable_obfuscation = server_data.get('obfuscation', ENABLE_OBFUSCATION)
-        auto_start = server_data.get('auto_start', AUTO_START_SERVERS)
+        enable_obfuscation = server_data.get('obfuscation', config.ENABLE_OBFUSCATION)
+        auto_start = server_data.get('auto_start', config.AUTO_START_SERVERS)
         server_id = str(uuid.uuid4())[:6]
         interface_name = f"wg-{server_id}"
-        config_path = os.path.join(WIREGUARD_CONFIG_DIR, f"{interface_name}.conf")
+        config_path = os.path.join(config.WIREGUARD_CONFIG_DIR, f"{interface_name}.conf")
         server_keys = self.generate_wireguard_keys()
 
         obfuscation_params = None
@@ -308,7 +308,7 @@ H4 = {obfuscation_params['H4']}
 
         client_i_settings = {}
         if apply_i_settings:
-            client_i_settings = {'i1': DEFAULT_I1, 'i2': DEFAULT_I2, 'i3': DEFAULT_I3, 'i4': DEFAULT_I4, 'i5': DEFAULT_I5}
+            client_i_settings = {'i1': config.DEFAULT_I1, 'i2': config.DEFAULT_I2, 'i3': config.DEFAULT_I3, 'i4': config.DEFAULT_I4, 'i5': config.DEFAULT_I5}
             if i_settings:
                 for i in range(1, 6):
                     i_key = f'i{i}'
@@ -473,7 +473,7 @@ PersistentKeepalive = 25
         if i_settings is not None:
             new_i_settings = {}
             if apply_i_settings or client.get('apply_i_settings', False):
-                new_i_settings = {'i1': DEFAULT_I1, 'i2': DEFAULT_I2, 'i3': DEFAULT_I3, 'i4': DEFAULT_I4, 'i5': DEFAULT_I5}
+                new_i_settings = {'i1': config.DEFAULT_I1, 'i2': config.DEFAULT_I2, 'i3': config.DEFAULT_I3, 'i4': config.DEFAULT_I4, 'i5': config.DEFAULT_I5}
                 for i in range(1, 6):
                     i_key = f'i{i}'
                     if i_key in i_settings and i_settings[i_key]:
@@ -497,7 +497,7 @@ PersistentKeepalive = 25
         if not client:
             return False, "Client not found"
 
-        suspended_dir = os.path.join(WIREGUARD_CONFIG_DIR, 'suspended')
+        suspended_dir = os.path.join(config.WIREGUARD_CONFIG_DIR, 'suspended')
         os.makedirs(suspended_dir, exist_ok=True)
 
         if os.path.exists(server['config_path']):
@@ -546,7 +546,7 @@ PersistentKeepalive = 25
         if client.get('status') != 'suspended':
             return False, "Client is not suspended"
 
-        suspended_path = os.path.join(WIREGUARD_CONFIG_DIR, 'suspended', f"{client_id}.conf")
+        suspended_path = os.path.join(config.WIREGUARD_CONFIG_DIR, 'suspended', f"{client_id}.conf")
         if not os.path.exists(suspended_path):
             return False, "Suspended config file not found"
 
