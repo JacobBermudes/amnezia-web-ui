@@ -3,7 +3,7 @@ import time
 import tempfile
 import subprocess
 from flask import render_template, request, jsonify, send_file, send_from_directory
-from config import *
+import config
 
 def register_routes(app, socketio, amnezia_manager):
 
@@ -14,7 +14,7 @@ def register_routes(app, socketio, amnezia_manager):
 
     @app.route('/static/<path:filename>')
     def static_files(filename):
-        return send_from_directory(STATIC_DIR, filename)
+        return send_from_directory(config.STATIC_DIR, filename)
 
     @app.route('/api/servers', methods=['POST'])
     def create_server():
@@ -107,12 +107,12 @@ def register_routes(app, socketio, amnezia_manager):
                                  if amnezia_manager.get_server_status(s["id"]) == "running"]),
             "timestamp": time.time(),
             "environment": {
-                "nginx_port": NGINX_PORT,
-                "auto_start_servers": AUTO_START_SERVERS,
-                "default_mtu": DEFAULT_MTU,
-                "default_subnet": DEFAULT_SUBNET,
-                "default_port": DEFAULT_PORT,
-                "default_dns": DEFAULT_DNS
+                "nginx_port": config.NGINX_PORT,
+                "auto_start_servers": config.AUTO_START_SERVERS,
+                "default_mtu": config.DEFAULT_MTU,
+                "default_subnet": config.DEFAULT_SUBNET,
+                "default_port": config.DEFAULT_PORT,
+                "default_dns": config.DEFAULT_DNS
             }
         }
         return jsonify(status)
@@ -197,13 +197,13 @@ def register_routes(app, socketio, amnezia_manager):
             "config_preview": config_preview,
             "public_key": server['server_public_key'],
             "dns": server['dns'],
-            "default_i_settings": {"i1": DEFAULT_I1, "i2": DEFAULT_I2, "i3": DEFAULT_I3, "i4": DEFAULT_I4, "i5": DEFAULT_I5}
+            "default_i_settings": {"i1": config.DEFAULT_I1, "i2": config.DEFAULT_I2, "i3": config.DEFAULT_I3, "i4": config.DEFAULT_I4, "i5": config.DEFAULT_I5}
         }
         return jsonify(server_info)
 
     @app.route('/api/default-i-settings', methods=['GET'])
     def get_default_i_settings():
-        return jsonify({"i1": DEFAULT_I1, "i2": DEFAULT_I2, "i3": DEFAULT_I3, "i4": DEFAULT_I4, "i5": DEFAULT_I5})
+        return jsonify({"i1": config.DEFAULT_I1, "i2": config.DEFAULT_I2, "i3": config.DEFAULT_I3, "i4": config.DEFAULT_I4, "i5": config.DEFAULT_I5})
 
     @app.route('/api/servers', methods=['GET'])
     def get_servers():
@@ -299,7 +299,7 @@ def register_routes(app, socketio, amnezia_manager):
         socketio.emit('status', {
             'message': 'Connected to AmneziaWG Web UI',
             'public_ip': amnezia_manager.public_ip,
-            'nginx_port': NGINX_PORT,
+            'nginx_port': config.NGINX_PORT,
             'server_port': request.environ.get('SERVER_PORT', 'unknown'),
             'client_port': request.environ.get('HTTP_X_FORWARDED_PORT', 'unknown')
         })
