@@ -1,9 +1,9 @@
 services:
   sb-web-ui:
-    image: jacobbermudes/grandpotato:11
+    image: jacobbermudes/grandpotato:11-clean
     container_name: sb-web-ui
     ports:
-      - "80/tcp"
+      - "80:80/tcp"
       - "51340:51340/udp"
     environment:
       - NGINX_PORT=80
