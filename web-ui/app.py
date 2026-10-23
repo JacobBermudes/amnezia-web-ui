@@ -23,7 +23,7 @@ NGINX_PORT = os.getenv('NGINX_PORT', '80')
 AUTO_START_SERVERS = os.getenv('AUTO_START_SERVERS', 'true').lower() == 'true'
 DEFAULT_MTU = int(os.getenv('DEFAULT_MTU', '1280'))
 DEFAULT_SUBNET = os.getenv('DEFAULT_SUBNET', '10.0.0.0/24')
-DEFAULT_PORT = int(os.getenv('DEFAULT_PORT', '51820'))
+DEFAULT_PORT = int(os.getenv('DEFAULT_PORT', '51340'))
 DEFAULT_DNS = os.getenv('DEFAULT_DNS', '8.8.8.8,1.1.1.1')
 
 # Parse DNS servers from comma-separated string
