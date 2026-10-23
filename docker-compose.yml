@@ -4,7 +4,6 @@ services:
     container_name: sb-web-ui
     ports:
       - "80/tcp"
-      - "[::]:80:80"
       - "51340:51340/udp"
     environment:
       - NGINX_PORT=80
@@ -45,27 +44,6 @@ services:
     networks:
       surfboost:
         ipv4_address: 172.20.0.254
-
-  ygg-nat64:
-    image: jacobbermudes/yggdrasil-nat64:latest
-    container_name: ygg-nat64
-    restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-      - SYS_MODULE
-    sysctls:
-      - net.ipv4.ip_forward=1
-      - net.ipv6.conf.all.forwarding=1
-    devices:
-      - /dev/net/tun
-    ports:
-      - "9001:9001/tcp"
-    volumes:
-      - ./ygg-data/yggdrasil.conf:/etc/yggdrasil/yggdrasil.conf
-    networks:
-      surfboost:
-        ipv4_address: 172.20.0.253
 
 volumes:
   amnezia-data:
